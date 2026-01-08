@@ -268,7 +268,9 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	// If we have RTL inlines, reverse their order and recalculate positions
 	if (rtlInlines.length > 0) {
 		// Reverse the order of RTL inlines for proper display
-		rtlInlines.reverse();
+		rtlInlines = reverseWords(rtlInlines);
+
+		// rtlInlines.reverse();
 
 		// Recalculate x positions from right to left
 		var currentX = 0;
@@ -282,8 +284,6 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 			reorderedInlines.push(inline);
 		});
 
-		
-
 		// Add RTL inlines (already reversed)
 		rtlInlines.forEach(function(inline) {
 			inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
@@ -296,6 +296,112 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 		line.inlines = reorderedInlines;
 	}
 };
+
+function reverseWords(words) {
+	let reversed = [];
+	let i = words.length - 1;
+
+	const bracketPairs = {
+		">": "<",
+		"]": "[",
+		"}": "{",
+		")": "(",
+	};
+
+	while (i >= 0) {
+		const word = words[i];
+
+		const closingBracket = word.text.match(/[>\])}]/);
+		const openingBracket = word.text.match(/[<\[({]/);
+		let wordHasRtl = true;
+
+		if (word && typeof word.text === "string")
+			wordHasRtl = rtlUtils.containsRTL(word.text);
+
+		if (!wordHasRtl) { 
+
+			if (closingBracket) {
+				const openingBracket = bracketPairs[closingBracket[0]];
+
+				const group = [word];
+				let openFound = false;
+				let openFoundInWord = false;
+
+				if (!word.text.includes(openingBracket)) {
+					// Scan backward to find the matching opening bracket
+					for (let j = i - 1; j >= 0; j--) {
+						group.unshift(words[j]);
+						if (words[j].text.match(/[<\[\(\{]/)) {
+							openFound = true;
+							i = j - 1; // move index past the group
+							break;
+						}
+					}
+				} else {
+					openFoundInWord = true;
+				} 
+
+				reversed.push(...group);
+				if (!openFound) {
+					i--; // fallback if no opening bracket found 
+					if (!openFoundInWord) 
+						word.text = swapSingleBracket(word.text);
+				}
+				continue;
+			} else if (openingBracket) { 
+				word.text = swapSingleBracket(word.text);
+			}
+		}
+
+		// Regular word, just push
+		reversed.push(word);
+		i--;
+	}
+
+	return reversed;
+}
+
+function swapSingleBracket(str) {
+  // Define bracket pairs
+  const pairs = {
+    "{": "}",
+    "(": ")",
+    "[": "]",
+    "<": ">"
+  };
+  const reversePairs = {
+    "}": "{",
+    ")": "(",
+    "]": "[",
+    ">": "<"
+  };
+
+  // Case 1: Starts with opening bracket
+  if (Object.keys(pairs).includes(str[0])) {
+    const withoutBracket = str.slice(1);
+
+    // Capture trailing spaces
+    const match = withoutBracket.match(/(\s*)$/);
+    const trailingSpaces = match ? match[0] : "";
+    const core = withoutBracket.slice(0, withoutBracket.length - trailingSpaces.length);
+
+    return core + pairs[str[0]] + trailingSpaces;
+  }
+
+  // Case 2: Ends with closing bracket
+  const lastChar = str.trimEnd().slice(-1);
+  if (Object.keys(reversePairs).includes(lastChar)) {
+    // Capture trailing spaces
+    const match = str.match(/(\s*)$/);
+    const trailingSpaces = match ? match[0] : "";
+    const core = str.slice(0, str.length - trailingSpaces.length - 1);
+
+    return reversePairs[lastChar] + core + trailingSpaces;
+  }
+
+  // Otherwise return unchanged
+  return str;
+}
 
 function cloneLine(line) {
 	var result = new Line(line.maxWidth);
