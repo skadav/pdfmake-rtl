@@ -11,6 +11,7 @@
             margin: 0 auto;
             padding: 20px;
             direction: ltr;
+            font-size: .8em;
         }
         
         .container {
@@ -118,6 +119,42 @@
     <p>This example demonstrates how to use PDFMake with automatic RTL support in the browser.</p>
     
     <div class="container">
+        <div class="panel">
+            <h3>📝 Mixed Text with Bracket</h3>
+
+            <div class="ltr-preview">هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.</div>
+            <div class="ltr-preview">فحص مستوى سائل التبريد(زيت)</div>
+            <div class="ltr-preview">فحص نظام (التكييف) والتدفئة</div>
+            <div class="ltr-preview">فحص نظام / التكييف / والتدفئة</div>
+            <div class="ltr-preview">فحص البطارية Battery Condition</div>
+            <div class="ltr-preview">فحص البطارية / Battery Condition</div>
+            <div class="ltr-preview">فحص البطارية/Battery Condition</div>
+            <div class="ltr-preview">Battery Condition / فحص البطارية</div>
+            <div class="ltr-preview">Battery Condition/فحص البطارية</div>
+            <div class="ltr-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية Battery Condition Voltage Test 12.5V نتيجة طبيعية.</div>
+            <div class="ltr-preview">فحص البطارية (Battery Condition) Voltage Test <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية / Battery Condition / Voltage Test <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية \ Battery Condition \ Voltage Test <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية - Battery Condition - Voltage Test <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية _ Battery Condition _ Voltage Test <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">فحص البطارية "Double Quote" <نتيجة طبيعية>.</div>
+            <div class="ltr-preview">CLEANING AIR/فحص مستوى سائل التبريد</div>
+
+            <!-- <table>
+                <tbody>
+                    <td class="ltr-preview">هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.</td>
+                    <td class="ltr-preview">فحص مستوى سائل التبريد(زيت)</td>
+                    <td class="ltr-preview">فحص نظام (التكييف) والتدفئة</td>
+                    <td class="ltr-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V]<نتيجة طبيعية>.</td>
+                </tbody>
+            </table> -->
+
+            <button onclick="generateTextPDF()">Generate Text PDF</button>
+        </div>
         <!-- Text Examples -->
         <div class="panel">
             <h3>📝 Mixed Text with Bracket</h3>
@@ -125,16 +162,33 @@
             <div class="rtl-preview">هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.</div>
             <div class="rtl-preview">فحص مستوى سائل التبريد(زيت)</div>
             <div class="rtl-preview">فحص نظام (التكييف) والتدفئة</div>
-            <div class="rtl-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V]<نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص نظام / التكييف / والتدفئة</div>
+            <div class="rtl-preview">فحص البطارية Battery Condition</div>
+            <div class="rtl-preview">فحص البطارية / Battery Condition</div>
+            <div class="rtl-preview">فحص البطارية/Battery Condition</div>
+            <div class="rtl-preview">Battery Condition / فحص البطارية</div>
+            <div class="rtl-preview">Battery Condition/فحص البطارية</div>
+            <div class="rtl-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية Battery Condition Voltage Test 12.5V نتيجة طبيعية.</div>
+            <div class="rtl-preview">فحص البطارية (Battery Condition) Voltage Test <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية / Battery Condition / Voltage Test <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية \ Battery Condition \ Voltage Test <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية - Battery Condition - Voltage Test <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية _ Battery Condition _ Voltage Test <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">فحص البطارية "Double Quote" <نتيجة طبيعية>.</div>
+            <div class="rtl-preview">CLEANING AIR/فحص مستوى سائل التبريد</div>
 
-            <table>
+            <!-- <table>
                 <tbody>
                     <td class="rtl-preview">هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.</td>
                     <td class="rtl-preview">فحص مستوى سائل التبريد(زيت)</td>
                     <td class="rtl-preview">فحص نظام (التكييف) والتدفئة</td>
                     <td class="rtl-preview">فحص البطارية (Battery Condition) {Voltage Test} [12.5V]<نتيجة طبيعية>.</td>
                 </tbody>
-            </table>
+            </table> -->
 
             <button onclick="generateTextPDF()">Generate Text PDF</button>
         </div>
@@ -225,20 +279,40 @@
                     { text: 'هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.', margin: [0, 5, 0, 10] },
                     { text: 'فحص مستوى سائل التبريد(زيت)', margin: [0, 5, 0, 10]},
                     { text: 'فحص نظام (التكييف) والتدفئة', margin: [0, 5, 0, 10]},
+                    { text: 'فحص نظام / التكييف / والتدفئة' , margin: [0, 5, 0, 10]},
+                    { text: 'فحص البطارية Battery Condition', margin: [0, 5, 0, 10], font: 'Nillima'},
+                    { text: 'فحص البطارية / Battery Condition', margin: [0, 5, 0, 10], font: 'Nillima'},
+                    { text: 'فحص البطارية/Battery Condition', margin: [0, 5, 0, 10], font: 'Nillima'},
+                    { text: 'Battery Condition / فحص البطارية', margin: [0, 5, 0, 10], font: 'Nillima'},
+                    { text: 'Battery Condition/فحص البطارية', margin: [0, 5, 0, 10], font: 'Nillima'},
                     { text: 'فحص البطارية (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.', margin: [0, 5, 0, 10], font: 'Nillima'},
-                    {
-                        table: {
-                            body: [ 
-                                [
-                                    { text: 'فحص البطارية (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.', font: 'Nillima' },
-                                    { text: 'فحص نظام (التكييف) والتدفئة' },
-                                    { text: 'فحص مستوى سائل التبريد(زيت)' },
-                                    { text: 'هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.' },
-                                ]
-                            ],
-                            width: ['30', '100', '100', '100']
-                        }
-                    }
+                    { text: 'فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية Front Normal (Battery Condition) {Voltage Test} [12.5V] Back Normal <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية Battery Condition Voltage Test 12.5V نتيجة طبيعية.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية (Battery Condition) Voltage Test <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية / Battery Condition / Voltage Test <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية \\ Battery Condition \\ Voltage Test <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية - Battery Condition - Voltage Test <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية _ Battery Condition _ Voltage Test <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'فحص البطارية "Double Quote" <نتيجة طبيعية>.', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'CLEANING AIR/فحص مستوى سائل التبريد', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'CLEANING /فحص مستوى سائل التبريد', margin: [0,5,0,10], font: 'Nillima'},
+                    { text: 'CLEANING AIR - فحص مستوى سائل التبريد', margin: [0,5,0,10], font: 'Nillima'},
+
+                    // {
+                    //     table: {
+                    //         body: [ 
+                    //             [
+                    //                 { text: 'فحص البطارية (Battery Condition) {Voltage Test} [12.5V] <نتيجة طبيعية>.', font: 'Nillima' },
+                    //                 { text: 'فحص نظام (التكييف) والتدفئة' },
+                    //                 { text: 'فحص مستوى سائل التبريد(زيت)' },
+                    //                 { text: 'هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.' },
+                    //             ]
+                    //         ],
+                    //         width: ['30', '100', '100', '100']
+                    //     }
+                    // }
                 ],
                 styles: {
                     header: { fontSize: 18, alignment: 'center', margin: [0, 0, 0, 10] },
