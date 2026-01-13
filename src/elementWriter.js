@@ -76,6 +76,8 @@ ElementWriter.prototype.alignLine = function (line) {
 
 	var offset = 0;
 
+	var ltrMixed = !isRTL && line.inlines.some(x => rtlUtils.containsRTL(x.text));
+
 	// For RTL lines, we need special handling
 	if (isRTL) {
 		// If it's RTL and no explicit alignment, default to right
@@ -85,6 +87,11 @@ ElementWriter.prototype.alignLine = function (line) {
 
 		// For RTL, we need to reverse the order of inlines and adjust their positions
 		this.adjustRTLInlines(line, width);
+	} else if (ltrMixed) {
+		// if (!alignment || alignment === "right")
+		// 	alignment = "left";
+
+		otoAdjustLtrMixedInline(line, width);
 	}
 
 	switch (alignment) {
@@ -289,7 +296,7 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 		return;
 	}
 
-	otoAdjustRtlInLine(line, availableWidth);
+	otoAdjustRtlInlines(line, availableWidth);
 
 	return;
 
@@ -314,10 +321,7 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 
 	// If we have RTL inlines, reverse their order and recalculate positions
 	if (rtlInlines.length > 0) {
-		// Reverse the order of RTL inlines for proper display
-		rtlInlines = reverseWords(rtlInlines);
-
-		// rtlInlines.reverse();
+		rtlInlines.reverse();
 
 		// Recalculate x positions from right to left
 		var currentX = 0;
@@ -343,7 +347,7 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	}
 };
 
-function otoAdjustRtlInLine(line, availableWidth) {
+function otoAdjustRtlInlines(line, availableWidth) {
 
 	line.inlines = adjustLtrGroup(line.inlines);
 
@@ -359,12 +363,58 @@ function otoAdjustRtlInLine(line, availableWidth) {
 		posX += inline.width;
 		if (inline.direction === "rtl") {
 			inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
-			inline.text = fixArabicEndWithSpecialCharacter(inline.text);
+			inline.text = fixRtlArabicEndWithSpecialCharacter(inline.text);
 		}
 		return inline;
 	});
 
 	line.inlines = reversedInlines;
+}
+
+function otoAdjustLtrMixedInline(line, availableWidth) {
+  const result = [];
+  let buffer = [];
+
+  // remap rtl
+  line.inlines.map(x => {
+	if (rtlUtils.containsRTL(x.text)) {
+		x.direction = 'rtl';
+		x.isRTL = true;
+	}
+  });
+
+  line.inlines = normalizeRtlForLtrDisplay(line.inlines);
+	line.inlines = adjustRtlGroup(line.inlines);
+
+  for (const item of line.inlines) {
+    if (item.direction === "rtl") {
+      buffer.push(item);
+    } else {
+      if (buffer.length) {
+        result.push(...buffer.reverse());
+        buffer = [];
+      }
+      result.push(item);
+    }
+  }
+
+
+  if (buffer.length) {
+    result.push(...buffer.reverse());
+  }
+
+	let posX = line.inlines[0].x;
+
+	result.map((inline) => {
+		inline.x = posX;
+		posX += inline.width;
+		if (inline.direction === "rtl") {
+			inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
+		}
+		return inline;
+	});
+
+  line.inlines = result;
 }
 
 function adjustLtrGroup(arr) {
@@ -397,6 +447,85 @@ function adjustLtrGroup(arr) {
     const nextGroup = grouped[i + 1];
 
     if (group.direction === "ltr" && nextGroup.direction === "rtl") {
+      let lastItem = group.items[group.items.length - 1];
+      let trimmed = lastItem.text.trim();
+      let lastChar = trimmed.slice(-1);
+
+      if (specialChars.test(lastChar)) {
+      	const w = charWidth(lastChar);
+        // Remove special char from last item
+        lastItem.text = ' ' + trimmed.slice(0, -1);
+		lastItem.width -= w;
+
+        // Prepend special char to first item of LTR group
+        group.items[0].text = lastChar + group.items[0].text.trim();
+		group.items[0].width += w;
+      }
+    }
+  }
+
+  // Step 3: Flatten back into array
+  return grouped.flatMap(g => g.items);
+}
+
+function normalizeRtlForLtrDisplay(arr) {
+
+  const specialChars = /[!@#$%^&*_({[<,.?|\/-]$/;
+
+  for (let i = 0; i < arr.length - 1; i++) {
+    const current = arr[i];
+    const next = arr[i + 1];
+
+    if (current.direction === "rtl" && next.direction === "rtl") {
+      // Trim whitespace at the end for checking
+      const trimmed = current.text.trimEnd();
+
+      // Check if last character is special
+      const lastChar = trimmed.charAt(trimmed.length - 1);
+
+      if (specialChars.test(lastChar)) {
+        // Remove the special char from the end of current
+        current.text = trimmed.slice(0, -1).trimEnd() + " ";
+
+        // Add the special char to the beginning of next
+        current.text = " " + lastChar + " " + current.text.trim();
+      }
+    }
+  }
+
+  return arr;
+}
+
+function adjustRtlGroup(arr) {
+  const specialChars = /[!@#$%^&*_({[<,.?|\/-]$/;
+
+  // crude width estimate: assume each char ~4 units wide
+  function charWidth(ch) {
+    return 4.0;
+  }
+
+  // Step 1: Group consecutive items by direction
+  let grouped = [];
+  let currentGroup = null;
+
+  for (let item of arr) {
+    if (!currentGroup || currentGroup.direction !== item.direction) {
+      currentGroup = {
+        direction: item.direction,
+        isRTL: item.isRTL,
+        items: []
+      };
+      grouped.push(currentGroup);
+    }
+    currentGroup.items.push(item);
+  }
+
+  // Step 2: Adjust LTR groups if last char is special and next group is RTL
+  for (let i = 0; i < grouped.length - 1; i++) {
+    const group = grouped[i];
+    const nextGroup = grouped[i + 1];
+
+    if (group.direction === "rtl" && nextGroup.direction === "ltr") {
       let lastItem = group.items[group.items.length - 1];
       let trimmed = lastItem.text.trim();
       let lastChar = trimmed.slice(-1);
@@ -471,7 +600,6 @@ function splitLtrRunByBrackets(run) {
   return groups;
 }
 
-// --- Main grouping function ---
 function groupInlines(inlines) {
   const groups = [];
   let currentLTRRun = [];
@@ -502,70 +630,9 @@ function groupInlines(inlines) {
   return groups;
 }
 
-function fixArabicEndWithSpecialCharacter(text) {
-	text = text.replace(/\s+([\/\\\-\p{P}\p{S}]+)\s*$/u, "$1 ");
-	return text;
-}
-
-function reverseWords(words) {
-	let reversed = [];
-	let i = words.length - 1;
-
-	const bracketPairs = {
-		">": "<",
-		"]": "[",
-		"}": "{",
-		")": "(",
-	};
-
-	while (i >= 0) {
-		const word = words[i];
-
-		const closingBracket = word.text.match(/[>\])}]/);
-		const openingBracket = word.text.match(/[<\[({]/);
-		let wordHasRtl = true;
-
-		if (word && typeof word.text === "string")
-			wordHasRtl = rtlUtils.containsRTL(word.text);
-
-		if (!wordHasRtl) {
-			if (closingBracket) {
-				const openingBracket = bracketPairs[closingBracket[0]];
-
-				const group = [word];
-				let openFound = false;
-				let openFoundInWord = false;
-
-				if (!word.text.includes(openingBracket)) {
-					// Scan backward to find the matching opening bracket
-					for (let j = i - 1; j >= 0; j--) {
-						group.unshift(words[j]);
-						if (words[j].text.match(/[<\[\(\{]/)) {
-							openFound = true;
-							i = j - 1; // move index past the group
-							break;
-						}
-					}
-				} else {
-					openFoundInWord = true;
-				}
-
-				reversed.push(...group);
-				if (!openFound) {
-					i--; // fallback if no opening bracket found
-				}
-				continue;
-			} else if (openingBracket) {
-				word.text = swapSingleBracket(word.text);
-			}
-		}
-
-		// Regular word, just push
-		reversed.push(word);
-		i--;
-	}
-
-	return reversed;
+function fixRtlArabicEndWithSpecialCharacter(text) {
+	// remove whitespace before a trailing special character 
+	return text.replace(/\s+([\/\\\-\p{P}\p{S}]+)\s*$/u, "$1 ");
 }
 
 function cloneLine(line) {
